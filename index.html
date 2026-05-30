@@ -1,0 +1,217 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.dash { padding: 1.5rem 1rem; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.title { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+.status-badge { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 12px; border-radius: var(--border-radius-md); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+.dot.connected { background: #3B6D11; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; }
+.card-label { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.card-value { font-size: 36px; font-weight: 500; color: var(--color-text-primary); line-height: 1; }
+.card-unit { font-size: 16px; font-weight: 400; color: var(--color-text-secondary); margin-left: 4px; }
+.gauge-wrap { display: flex; justify-content: center; margin-bottom: 1.5rem; gap: 24px; flex-wrap: wrap; }
+.gauge-item { text-align: center; }
+.gauge-label { font-size: 13px; color: var(--color-text-secondary); margin-top: 8px; }
+.history-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1.5rem; }
+.history-title { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1rem; }
+.config-card { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+.config-row { display: flex; flex-direction: column; gap: 8px; }
+.config-field { display: flex; flex-direction: column; gap: 4px; }
+.config-field label { font-size: 12px; color: var(--color-text-secondary); }
+.config-field input { font-size: 13px; padding: 6px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); width: 100%; }
+.connect-btn { margin-top: 10px; width: 100%; padding: 8px; font-size: 14px; cursor: pointer; }
+.last-update { font-size: 12px; color: var(--color-text-tertiary); text-align: center; margin-top: 0.5rem; }
+</style>
+
+<div class="dash">
+  <h2 class="sr-only">ESP32 sensor dashboard — real-time temperature and humidity over MQTT</h2>
+
+  <div class="header">
+    <span class="title">ESP32 Sensor</span>
+    <span class="status-badge">
+      <span class="dot" id="dot"></span>
+      <span id="status-text">연결 안됨</span>
+    </span>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-label"><i class="ti ti-temperature" aria-hidden="true"></i> Temperature</div>
+      <div class="card-value" id="temp-val">--<span class="card-unit">℃</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label"><i class="ti ti-droplet" aria-hidden="true"></i> Humidity</div>
+      <div class="card-value" id="humi-val">--<span class="card-unit">%</span></div>
+    </div>
+  </div>
+
+  <div class="gauge-wrap">
+    <div class="gauge-item">
+      <canvas id="g-temp" width="160" height="90" role="img" aria-label="Temperature gauge"></canvas>
+      <div class="gauge-label">Temperature</div>
+    </div>
+    <div class="gauge-item">
+      <canvas id="g-humi" width="160" height="90" role="img" aria-label="Humidity gauge"></canvas>
+      <div class="gauge-label">Humidity</div>
+    </div>
+  </div>
+
+  <div class="history-card">
+    <div class="history-title">Recent history</div>
+    <div style="position:relative; height:160px;">
+      <canvas id="history-chart" role="img" aria-label="Line chart of recent temperature and humidity readings"></canvas>
+    </div>
+  </div>
+
+  <div class="config-card">
+    <div class="config-row">
+      <div class="config-field">
+        <label>Broker (WebSocket)</label>
+        <input id="cfg-host" value="604efa86dab4428c9f2f4de139f5ca0a.s1.eu.hivemq.cloud" />
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div class="config-field">
+          <label>Username</label>
+          <input id="cfg-user" value="chunsik" />
+        </div>
+        <div class="config-field">
+          <label>Password</label>
+          <input id="cfg-pass" type="password" placeholder="패스워드 입력" />
+        </div>
+      </div>
+      <div class="config-field">
+        <label>Topic</label>
+        <input id="cfg-topic" value="sensor/device_01/data" />
+      </div>
+      <button class="connect-btn" id="connect-btn" onclick="toggleConnect()">연결 ↗</button>
+    </div>
+  </div>
+
+  <div class="last-update" id="last-update"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+<script>
+let client = null;
+let tempHistory = [];
+let humiHistory = [];
+let labels = [];
+let histChart = null;
+
+function drawGauge(canvasId, value, min, max, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const cx = w / 2, cy = h - 10;
+  const r = Math.min(w, h * 2) / 2 - 10;
+  const startA = Math.PI, endA = 2 * Math.PI;
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const valA = startA + pct * Math.PI;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startA, endA);
+  ctx.strokeStyle = 'rgba(128,128,128,0.15)';
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startA, valA);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  ctx.fillStyle = 'var(--color-text-primary)';
+  ctx.font = '500 18px var(--font-sans)';
+  ctx.textAlign = 'center';
+  ctx.fillText(value === null ? '--' : value.toFixed(1), cx, cy - 8);
+}
+
+function initHistChart() {
+  const ctx = document.getElementById('history-chart');
+  histChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Temp (℃)', data: [], borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.08)', tension: 0.3, pointRadius: 3, borderWidth: 2 },
+        { label: 'Humi (%)', data: [], borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.08)', tension: 0.3, pointRadius: 3, borderWidth: 2, borderDash: [4,3] }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 11 }, maxTicksLimit: 8, autoSkip: true }, grid: { display: false } },
+        y: { ticks: { font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.1)' } }
+      },
+      animation: { duration: 300 }
+    }
+  });
+}
+
+function updateUI(temp, humi) {
+  document.getElementById('temp-val').innerHTML = temp.toFixed(1) + '<span class="card-unit">℃</span>';
+  document.getElementById('humi-val').innerHTML = humi.toFixed(1) + '<span class="card-unit">%</span>';
+  drawGauge('g-temp', temp, 0, 50, '#D85A30');
+  drawGauge('g-humi', humi, 0, 100, '#1D9E75');
+  const now = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  labels.push(now);
+  tempHistory.push(temp);
+  humiHistory.push(humi);
+  if (labels.length > 20) { labels.shift(); tempHistory.shift(); humiHistory.shift(); }
+  if (histChart) {
+    histChart.data.labels = [...labels];
+    histChart.data.datasets[0].data = [...tempHistory];
+    histChart.data.datasets[1].data = [...humiHistory];
+    histChart.update('none');
+  }
+  document.getElementById('last-update').textContent = '마지막 갱신: ' + now;
+}
+
+function setStatus(connected, text) {
+  const dot = document.getElementById('dot');
+  const st = document.getElementById('status-text');
+  dot.className = 'dot' + (connected ? ' connected' : '');
+  st.textContent = text;
+}
+
+function toggleConnect() {
+  if (client && client.connected) {
+    client.end();
+    client = null;
+    setStatus(false, '연결 안됨');
+    document.getElementById('connect-btn').textContent = '연결 ↗';
+    return;
+  }
+  const host = document.getElementById('cfg-host').value.trim();
+  const user = document.getElementById('cfg-user').value.trim();
+  const pass = document.getElementById('cfg-pass').value;
+  const topic = document.getElementById('cfg-topic').value.trim();
+  const url = 'wss://' + host + ':8884/mqtt';
+  setStatus(false, '연결 중...');
+  client = mqtt.connect(url, { username: user, password: pass, reconnectPeriod: 3000 });
+  client.on('connect', () => {
+    setStatus(true, '연결됨');
+    document.getElementById('connect-btn').textContent = '연결 해제';
+    client.subscribe(topic);
+  });
+  client.on('error', () => setStatus(false, '연결 오류'));
+  client.on('offline', () => setStatus(false, '오프라인'));
+  client.on('message', (t, msg) => {
+    try {
+      const d = JSON.parse(msg.toString());
+      if (d.temp !== undefined && d.humi !== undefined) updateUI(parseFloat(d.temp), parseFloat(d.humi));
+    } catch(e) {}
+  });
+}
+
+initHistChart();
+drawGauge('g-temp', null, 0, 50, '#D85A30');
+drawGauge('g-humi', null, 0, 100, '#1D9E75');
+</script>
