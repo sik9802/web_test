@@ -10,9 +10,9 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
 
-  .dash { max-width: 480px; margin: 0 auto; padding: 1.25rem 1rem; }
+  .dash { max-width: 480px; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
 
-  /* 상단바 */
+  /* ── 상단바 ── */
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
   .topbar-title { font-size: 17px; font-weight: 600; }
   .device-id { font-size: 12px; color: #888; background: #ebebeb; padding: 3px 8px; border-radius: 6px; margin-left: 8px; }
@@ -21,24 +21,24 @@
   .dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; }
   .conn-pill.on .dot { background: #52b26a; }
 
-  /* 메트릭 카드 */
+  /* ── 메트릭 카드 ── */
   .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
   .metric { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 1rem 1.1rem; }
-  .metric-label { font-size: 12px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+  .metric-label { font-size: 12px; color: #888; margin-bottom: 6px; }
   .metric-val { font-size: 34px; font-weight: 600; line-height: 1; color: #1a1a1a; }
   .metric-unit { font-size: 15px; font-weight: 400; color: #aaa; margin-left: 2px; }
   .metric-delta { font-size: 11px; color: #aaa; margin-top: 5px; min-height: 14px; }
   .metric-delta.up { color: #e05a2b; }
   .metric-delta.dn { color: #2a7a42; }
 
-  /* 차트 */
+  /* ── 차트 ── */
   .chart-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
   .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
   .chart-title { font-size: 13px; color: #888; }
   .legend { display: flex; gap: 12px; font-size: 11px; color: #888; }
   .leg-sq { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 3px; vertical-align: middle; }
 
-  /* 브로커 설정 */
+  /* ── 브로커 설정 ── */
   .cfg-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
   .cfg-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; cursor: pointer; }
   .cfg-header-left { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
@@ -56,13 +56,113 @@
   .btn-connect:hover { background: #f0f0f0; }
   .btn-connect.active { background: #eaf6ee; border-color: #52b26a; color: #2a7a42; }
 
-  /* 하단 */
+  /* ── 섹션 구분 ── */
+  .section-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 1.4rem 0 1rem;
+    font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: #aaa;
+  }
+  .section-divider::before,
+  .section-divider::after {
+    content: ''; flex: 1; height: 1px; background: #e8e8e8;
+  }
+
+  /* ── 스캔 설정 카드 ── */
+  .scan-cfg-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+  .scan-cfg-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .scan-cfg-row .cfg-field input { text-align: center; }
+  .btn-scan-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .btn-scan {
+    padding: 9px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border-radius: 8px;
+    border: none; background: #1a1a1a; color: #fff;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: opacity 0.15s;
+  }
+  .btn-scan:hover:not(:disabled) { opacity: 0.82; }
+  .btn-scan:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-scan-stop {
+    padding: 9px 14px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border-radius: 8px;
+    border: 1px solid #e05a2b; background: #fff; color: #e05a2b;
+    display: none; align-items: center; justify-content: center;
+    white-space: nowrap;
+  }
+  .btn-scan-stop.show { display: flex; }
+  .btn-scan-stop:hover { background: #fff5f2; }
+
+  /* ── 프로그레스 ── */
+  .scan-progress { margin-bottom: 1rem; display: none; }
+  .scan-progress.show { display: block; }
+  .prog-header { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-bottom: 5px; }
+  .prog-pct { color: #1a1a1a; font-weight: 600; }
+  .prog-track { height: 4px; background: #ebebeb; border-radius: 2px; overflow: hidden; }
+  .prog-fill { height: 100%; background: linear-gradient(90deg, #1a7aff, #1D9E75); border-radius: 2px; width: 0%; transition: width 0.25s ease; }
+
+  /* ── ID 그리드 ── */
+  .id-grid-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem; display: none; }
+  .id-grid-card.show { display: block; }
+  .id-grid-title { font-size: 12px; color: #888; margin-bottom: 10px; }
+  .id-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+  .id-cell {
+    width: 34px; height: 24px;
+    border-radius: 5px;
+    background: #f5f5f5;
+    border: 1px solid #e8e8e8;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #bbb;
+    font-variant-numeric: tabular-nums;
+    transition: background 0.2s, color 0.2s;
+  }
+  .id-cell.scanning {
+    background: #e8f0ff; border-color: #99b8ff; color: #1a7aff;
+  }
+  .id-cell.found {
+    background: #eaf6ee; border-color: #52b26a;
+    color: #1e7a38; font-weight: 700;
+    box-shadow: 0 0 0 1px #52b26a inset;
+  }
+
+  /* ── 발견 목록 ── */
+  .found-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; display: none; }
+  .found-card.show { display: block; }
+  .found-card-header { padding: 0.75rem 1rem; font-size: 13px; color: #888; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+  .found-badge-count { background: #eaf6ee; color: #2a7a42; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .found-list { padding: 0.5rem 1rem; display: flex; flex-direction: column; gap: 6px; }
+  .found-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    background: #fafafa; border: 1px solid #e8e8e8; border-radius: 8px;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .found-item-id {
+    width: 40px; height: 40px; border-radius: 8px;
+    background: #eaf6ee; border: 1px solid #52b26a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #1e7a38; flex-shrink: 0;
+  }
+  .found-item-info { flex: 1; }
+  .found-item-name { font-size: 13px; font-weight: 600; }
+  .found-item-sub { font-size: 11px; color: #aaa; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .found-item-tag { font-size: 10px; font-weight: 600; color: #52b26a; background: #eaf6ee; padding: 2px 7px; border-radius: 5px; }
+
+  /* 빈 상태 */
+  .empty-state { padding: 1.5rem 1rem; text-align: center; font-size: 12px; color: #bbb; }
+
+  /* ── 푸터 ── */
   .footer-bar { display: flex; justify-content: space-between; font-size: 11px; color: #bbb; padding: 0 2px; }
+
+  /* ── 스피너 ── */
+  .spin { width: 12px; height: 12px; border: 2px solid transparent; border-top-color: #fff; border-radius: 50%; animation: spin 0.5s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <div class="dash">
 
+  <!-- 상단바 -->
   <div class="topbar">
     <div style="display:flex;align-items:center">
       <span class="topbar-title">ESP32 Sensor</span>
@@ -74,14 +174,15 @@
     </div>
   </div>
 
+  <!-- ─── 센서 섹션 ─────────────────────────────── -->
   <div class="metrics">
     <div class="metric">
-      <div class="metric-label">&#127777; 온도</div>
+      <div class="metric-label">🌡 온도</div>
       <div class="metric-val" id="temp-val">--<span class="metric-unit">℃</span></div>
       <div class="metric-delta" id="temp-delta">&nbsp;</div>
     </div>
     <div class="metric">
-      <div class="metric-label">&#128167; 습도</div>
+      <div class="metric-label">💧 습도</div>
       <div class="metric-val" id="humi-val">--<span class="metric-unit">%</span></div>
       <div class="metric-delta" id="humi-delta">&nbsp;</div>
     </div>
@@ -96,14 +197,15 @@
       </div>
     </div>
     <div style="position:relative;height:140px">
-      <canvas id="hchart" role="img" aria-label="온도 및 습도 시계열 차트">실시간 온도·습도 데이터</canvas>
+      <canvas id="hchart"></canvas>
     </div>
   </div>
 
+  <!-- 브로커 설정 -->
   <div class="cfg-card">
     <div class="cfg-header" onclick="toggleCfg()">
-      <span class="cfg-header-left">&#9881; 브로커 설정</span>
-      <span class="cfg-chevron" id="cfg-chev">&#9660;</span>
+      <span class="cfg-header-left">⚙ 브로커 설정</span>
+      <span class="cfg-chevron" id="cfg-chev">▾</span>
     </div>
     <div id="cfg-body" class="cfg-body">
       <div class="cfg-grid">
@@ -120,7 +222,7 @@
           <input id="cfg-pass" type="password" placeholder="패스워드">
         </div>
         <div class="cfg-field full">
-          <label>Topic</label>
+          <label>센서 Topic</label>
           <input id="cfg-topic" value="sensor/device_01/data">
         </div>
       </div>
@@ -130,6 +232,60 @@
     </div>
   </div>
 
+  <!-- ─── Modbus 스캐너 섹션 ──────────────────── -->
+  <div class="section-divider">Modbus 스캐너</div>
+
+  <!-- 스캔 설정 -->
+  <div class="scan-cfg-card">
+    <div class="scan-cfg-row">
+      <div class="cfg-field">
+        <label>START ID</label>
+        <input id="scan-start" type="number" min="1" max="247" value="1">
+      </div>
+      <div class="cfg-field">
+        <label>END ID</label>
+        <input id="scan-end" type="number" min="1" max="247" value="20">
+      </div>
+      <div class="cfg-field">
+        <label>TIMEOUT (ms)</label>
+        <input id="scan-timeout" type="number" min="50" max="2000" value="200">
+      </div>
+    </div>
+    <div class="btn-scan-row">
+      <button class="btn-scan" id="btn-scan" disabled onclick="startScan()">
+        <span id="scan-btn-label">스캔 시작</span>
+      </button>
+      <button class="btn-scan-stop" id="btn-stop" onclick="stopScan()">■ 중단</button>
+    </div>
+  </div>
+
+  <!-- 프로그레스 -->
+  <div class="scan-progress" id="scan-progress">
+    <div class="prog-header">
+      <span id="prog-label">스캔 중...</span>
+      <span class="prog-pct" id="prog-pct">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  </div>
+
+  <!-- ID 맵 그리드 -->
+  <div class="id-grid-card" id="id-grid-card">
+    <div class="id-grid-title">ID MAP</div>
+    <div class="id-grid" id="id-grid"></div>
+  </div>
+
+  <!-- 발견 목록 -->
+  <div class="found-card" id="found-card">
+    <div class="found-card-header">
+      <span>발견된 슬레이브</span>
+      <span class="found-badge-count" id="found-count-badge">0개</span>
+    </div>
+    <div class="found-list" id="found-list">
+      <div class="empty-state" id="empty-state">스캔 결과가 여기 표시됩니다</div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
   <div class="footer-bar">
     <span id="last-update">마지막 수신: --</span>
     <span id="msg-count">수신 0건</span>
@@ -138,10 +294,20 @@
 </div>
 
 <script>
+// ── 공용 상태 ──────────────────────────────────
 let client = null, hChart = null;
 let labels = [], tData = [], hData = [];
 let msgCount = 0, prevTemp = null, prevHumi = null;
 
+// ── 스캔 상태 ──────────────────────────────────
+let isScanning   = false;
+let scanStart    = 1, scanEnd = 20;
+let foundCount   = 0;
+let currentCell  = null;
+
+// ═══════════════════════════════════════════════
+// 차트 초기화
+// ═══════════════════════════════════════════════
 function initChart() {
   hChart = new Chart(document.getElementById('hchart'), {
     type: 'line',
@@ -161,7 +327,7 @@ function initChart() {
       },
       scales: {
         x: { ticks: { font: { size: 10 }, maxTicksLimit: 5, autoSkip: true }, grid: { display: false } },
-        y: { position: 'left', min: 0, max: 50, ticks: { font: { size: 10 }, callback: v => v + '℃' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        y:  { position: 'left',  min: 0, max: 50,  ticks: { font: { size: 10 }, callback: v => v + '℃' }, grid: { color: 'rgba(0,0,0,0.05)' } },
         y2: { position: 'right', min: 0, max: 100, ticks: { font: { size: 10 }, callback: v => v + '%' }, grid: { display: false } }
       },
       animation: { duration: 200 }
@@ -169,12 +335,102 @@ function initChart() {
   });
 }
 
+// ═══════════════════════════════════════════════
+// MQTT 연결
+// ═══════════════════════════════════════════════
+function toggleConnect() {
+  if (client && client.connected) {
+    client.end(); client = null;
+    setConnUI('disconnected');
+    document.getElementById('btn-scan').disabled = true;
+    return;
+  }
+  const host  = document.getElementById('cfg-host').value.trim();
+  const user  = document.getElementById('cfg-user').value.trim();
+  const pass  = document.getElementById('cfg-pass').value;
+  const topic = document.getElementById('cfg-topic').value.trim();
+
+  setConnUI('connecting');
+
+  client = mqtt.connect('wss://' + host + ':8884/mqtt', {
+    username: user, password: pass,
+    clientId: 'dash-' + Math.random().toString(16).slice(2, 8),
+    reconnectPeriod: 3000
+  });
+
+  client.on('connect', () => {
+    setConnUI('connected');
+    // ── 센서 토픽 ──
+    client.subscribe(topic);
+    // ── 스캔 결과 토픽 ──
+    client.subscribe('modbus/scan/result');
+    client.subscribe('modbus/scan/progress');
+    client.subscribe('modbus/scan/done');
+    client.subscribe('modbus/scan/status');
+    // 스캔 버튼 활성화
+    document.getElementById('btn-scan').disabled = false;
+  });
+
+  client.on('error',   () => setConnUI('disconnected'));
+  client.on('offline', () => setConnUI('disconnected'));
+  client.on('message', handleMessage);
+}
+
+// ═══════════════════════════════════════════════
+// 메시지 라우팅
+// ═══════════════════════════════════════════════
+function handleMessage(topic, msg) {
+  let data;
+  try { data = JSON.parse(msg.toString()); } catch { return; }
+
+  // ── 센서 데이터 ──
+  if (data.temp != null && data.humi != null) {
+    updateMetrics(parseFloat(data.temp), parseFloat(data.humi));
+    return;
+  }
+
+  // ── 스캔 진행 ──
+  if (topic === 'modbus/scan/progress') {
+    const cur   = data.current || 0;
+    const total = scanEnd - scanStart + 1;
+    const done  = Math.max(0, cur - scanStart + 1);
+    const pct   = Math.min(100, Math.round((done / total) * 100));
+
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-pct').textContent  = pct + '%';
+    document.getElementById('prog-label').textContent = `스캔 중 · ID ${cur} / ${scanEnd}`;
+
+    if (currentCell) currentCell.classList.remove('scanning');
+    const cell = document.getElementById('cell-' + cur);
+    if (cell) { cell.classList.add('scanning'); currentCell = cell; }
+    return;
+  }
+
+  // ── 슬레이브 발견 ──
+  if (topic === 'modbus/scan/result') {
+    const id = data.id;
+    const cell = document.getElementById('cell-' + id);
+    if (cell) { cell.classList.remove('scanning'); cell.classList.add('found'); }
+    addFoundItem(id);
+    return;
+  }
+
+  // ── 스캔 완료 ──
+  if (topic === 'modbus/scan/done') {
+    scanDone();
+    return;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// 센서 메트릭 업데이트
+// ═══════════════════════════════════════════════
 function updateMetrics(t, h) {
   document.getElementById('temp-val').innerHTML = t.toFixed(1) + '<span class="metric-unit">℃</span>';
   document.getElementById('humi-val').innerHTML = h.toFixed(1) + '<span class="metric-unit">%</span>';
 
   if (prevTemp !== null) {
-    const td = (t - prevTemp), hd = (h - prevHumi);
+    const td = t - prevTemp, hd = h - prevHumi;
     const tEl = document.getElementById('temp-delta');
     const hEl = document.getElementById('humi-delta');
     tEl.textContent = (td >= 0 ? '▲ ' : '▼ ') + Math.abs(td).toFixed(1) + ' 이전 대비';
@@ -187,7 +443,6 @@ function updateMetrics(t, h) {
   const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   labels.push(now); tData.push(t); hData.push(h);
   if (labels.length > 10) { labels.shift(); tData.shift(); hData.shift(); }
-
   hChart.data.labels = [...labels];
   hChart.data.datasets[0].data = [...tData];
   hChart.data.datasets[1].data = [...hData];
@@ -195,40 +450,136 @@ function updateMetrics(t, h) {
 
   msgCount++;
   document.getElementById('last-update').textContent = '마지막 수신: ' + now;
-  document.getElementById('msg-count').textContent = '수신 ' + msgCount + '건';
+  document.getElementById('msg-count').textContent   = '수신 ' + msgCount + '건';
 }
 
+// ═══════════════════════════════════════════════
+// 스캔 시작
+// ═══════════════════════════════════════════════
+function startScan() {
+  if (!client || !client.connected || isScanning) return;
+
+  scanStart  = parseInt(document.getElementById('scan-start').value)   || 1;
+  scanEnd    = parseInt(document.getElementById('scan-end').value)     || 20;
+  const tout = parseInt(document.getElementById('scan-timeout').value) || 200;
+
+  if (scanStart < 1)   scanStart = 1;
+  if (scanEnd > 247)   scanEnd   = 247;
+  if (scanStart > scanEnd) return;
+
+  // UI 초기화
+  resetScanUI();
+  isScanning  = true;
+  foundCount  = 0;
+  currentCell = null;
+
+  // 스캔 설정 카드 UI
+  const btnLabel = document.getElementById('scan-btn-label');
+  const btnScan  = document.getElementById('btn-scan');
+  btnLabel.innerHTML = '<div class="spin"></div> 스캔 중...';
+  btnScan.disabled   = true;
+  document.getElementById('btn-stop').classList.add('show');
+
+  // 프로그레스 + 그리드 + 결과 카드 표시
+  document.getElementById('scan-progress').classList.add('show');
+  document.getElementById('id-grid-card').classList.add('show');
+  document.getElementById('found-card').classList.add('show');
+  document.getElementById('prog-fill').style.width = '0%';
+  document.getElementById('prog-pct').textContent  = '0%';
+  document.getElementById('prog-label').textContent = `스캔 시작 · ID ${scanStart}~${scanEnd}`;
+
+  // ID 그리드 생성
+  buildGrid(scanStart, scanEnd);
+
+  // MQTT 스캔 요청 publish
+  const payload = JSON.stringify({ start: scanStart, end: scanEnd, timeout_ms: tout });
+  client.publish('modbus/scan/request', payload, { qos: 1 });
+}
+
+// ═══════════════════════════════════════════════
+// 스캔 완료 처리
+// ═══════════════════════════════════════════════
+function scanDone() {
+  isScanning = false;
+  if (currentCell) { currentCell.classList.remove('scanning'); currentCell = null; }
+
+  document.getElementById('scan-btn-label').textContent = '스캔 시작';
+  document.getElementById('btn-scan').disabled = false;
+  document.getElementById('btn-stop').classList.remove('show');
+
+  document.getElementById('prog-fill').style.width  = '100%';
+  document.getElementById('prog-pct').textContent   = '100%';
+  document.getElementById('prog-label').textContent = `완료 · ${foundCount}개 슬레이브 발견`;
+}
+
+// ── 중단 버튼 ──────────────────────────────────
+function stopScan() {
+  // UI만 리셋 (ESP32 scan_task는 완료까지 실행됨)
+  // 향후 "modbus/scan/stop" 토픽으로 ESP32에 중단 신호 추가 가능
+  scanDone();
+}
+
+// ── ID 그리드 생성 ──────────────────────────────
+function buildGrid(start, end) {
+  const grid = document.getElementById('id-grid');
+  grid.innerHTML = '';
+  for (let id = start; id <= end; id++) {
+    const cell = document.createElement('div');
+    cell.className = 'id-cell';
+    cell.id = 'cell-' + id;
+    cell.textContent = id;
+    grid.appendChild(cell);
+  }
+}
+
+// ── 스캔 UI 초기화 ─────────────────────────────
+function resetScanUI() {
+  document.getElementById('id-grid').innerHTML = '';
+  const list = document.getElementById('found-list');
+  list.innerHTML = '<div class="empty-state" id="empty-state">스캔 결과가 여기 표시됩니다</div>';
+  document.getElementById('found-count-badge').textContent = '0개';
+}
+
+// ── 발견 아이템 추가 ────────────────────────────
+function addFoundItem(id) {
+  foundCount++;
+  const emptyState = document.getElementById('empty-state');
+  if (emptyState) emptyState.remove();
+
+  document.getElementById('found-count-badge').textContent = foundCount + '개';
+
+  const item = document.createElement('div');
+  item.className = 'found-item';
+  item.innerHTML = `
+    <div class="found-item-id">${id}</div>
+    <div class="found-item-info">
+      <div class="found-item-name">슬레이브 ID ${id}</div>
+      <div class="found-item-sub">0x${id.toString(16).padStart(2,'0').toUpperCase()} · Modbus RTU · RS-485</div>
+    </div>
+    <div class="found-item-tag">FOUND</div>
+  `;
+  document.getElementById('found-list').appendChild(item);
+}
+
+// ═══════════════════════════════════════════════
+// 공통 UI 헬퍼
+// ═══════════════════════════════════════════════
 function setConnUI(state) {
-  const pill = document.getElementById('conn-pill');
-  const dot = document.getElementById('dot');
+  const pill  = document.getElementById('conn-pill');
   const label = document.getElementById('conn-label');
-  const btn = document.getElementById('btn-conn');
+  const btn   = document.getElementById('btn-conn');
   if (state === 'connected') {
     pill.className = 'conn-pill on'; label.textContent = '연결됨';
     btn.textContent = '연결 해제'; btn.className = 'btn-connect active';
   } else if (state === 'connecting') {
-    pill.className = 'conn-pill'; dot.style.background = '#f0a030';
+    pill.className = 'conn-pill';
+    document.getElementById('dot').style.background = '#f0a030';
     label.textContent = '연결 중...'; btn.textContent = '취소';
   } else {
     pill.className = 'conn-pill'; label.textContent = '연결';
     btn.textContent = '연결'; btn.className = 'btn-connect';
+    document.getElementById('btn-scan').disabled = true;
   }
-}
-
-function toggleConnect() {
-  if (client && client.connected) { client.end(); client = null; setConnUI('disconnected'); return; }
-  const host = document.getElementById('cfg-host').value.trim();
-  const user = document.getElementById('cfg-user').value.trim();
-  const pass = document.getElementById('cfg-pass').value;
-  const topic = document.getElementById('cfg-topic').value.trim();
-  setConnUI('connecting');
-  client = mqtt.connect('wss://' + host + ':8884/mqtt', { username: user, password: pass, reconnectPeriod: 3000 });
-  client.on('connect', () => { setConnUI('connected'); client.subscribe(topic); });
-  client.on('error', () => setConnUI('disconnected'));
-  client.on('offline', () => setConnUI('disconnected'));
-  client.on('message', (t, msg) => {
-    try { const d = JSON.parse(msg.toString()); if (d.temp != null && d.humi != null) updateMetrics(parseFloat(d.temp), parseFloat(d.humi)); } catch (e) {}
-  });
 }
 
 function toggleCfg() {
