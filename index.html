@@ -160,6 +160,60 @@
 
   .empty-state { padding: 1.5rem 1rem; text-align: center; font-size: 12px; color: #bbb; }
 
+  /* ── 앱 실행 로그 ── */
+  .log-card { background: #1a1a1a; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+  .log-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.7rem 1rem; cursor: pointer;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .log-card-header-left { display: flex; align-items: center; gap: 8px; }
+  .log-live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #52b26a; box-shadow: 0 0 5px #52b26a;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  .log-live-dot.paused { background: #888; box-shadow: none; animation: none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .log-card-title { font-size: 13px; font-weight: 500; color: #e0e0e0; }
+  .log-card-chevron { font-size: 12px; color: #555; transition: transform 0.2s; }
+  .log-controls { display: flex; gap: 6px; padding: 0.5rem 1rem; border-bottom: 1px solid #2a2a2a; }
+  .log-controls.hidden { display: none; }
+  .log-ctrl-btn {
+    font-size: 11px; padding: 4px 10px;
+    border-radius: 5px; cursor: pointer;
+    border: 1px solid #333; background: #252525; color: #aaa;
+    transition: all 0.15s;
+  }
+  .log-ctrl-btn:hover { background: #333; color: #e0e0e0; }
+  .log-ctrl-btn.active { background: #2a3a2a; border-color: #52b26a; color: #52b26a; }
+  .log-ctrl-btn.danger { border-color: #5a2a2a; color: #e05a2b; }
+  .log-ctrl-btn.danger:hover { background: #3a1a1a; }
+  .log-body { display: none; }
+  .log-body.open { display: block; }
+  .log-output {
+    height: 200px; overflow-y: auto;
+    padding: 0.6rem 0.8rem;
+    font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+    font-size: 11px; line-height: 1.6;
+    color: #c0c0c0;
+  }
+  .log-output::-webkit-scrollbar { width: 4px; }
+  .log-output::-webkit-scrollbar-track { background: transparent; }
+  .log-output::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  .log-line { display: flex; gap: 8px; margin-bottom: 1px; }
+  .log-time { color: #555; flex-shrink: 0; }
+  .log-tag  { flex-shrink: 0; font-weight: 600; }
+  .log-tag.wifi  { color: #52b26a; }
+  .log-tag.modbus { color: #f0a030; }
+  .log-tag.ota   { color: #1a7aff; }
+  .log-tag.main  { color: #c084fc; }
+  .log-tag.other { color: #888; }
+  .log-msg { color: #c0c0c0; word-break: break-all; }
+  .log-msg.warn  { color: #f0a030; }
+  .log-msg.error { color: #e05a2b; }
+  .log-empty { color: #444; text-align: center; padding: 1rem; font-size: 11px; }
+
   /* ── 푸터 ── */
   .footer-bar { display: flex; justify-content: space-between; font-size: 11px; color: #bbb; padding: 0 2px; }
 
@@ -320,6 +374,27 @@
     </div>
   </div>
 
+  <!-- ─── 앱 실행 로그 ─────────────────────────── -->
+  <div class="log-card" id="log-card">
+    <div class="log-card-header" onclick="toggleLog()">
+      <div class="log-card-header-left">
+        <span class="log-live-dot" id="log-dot"></span>
+        <span class="log-card-title">앱 실행 로그</span>
+      </div>
+      <span class="log-card-chevron" id="log-chev">▾</span>
+    </div>
+    <div class="log-controls hidden" id="log-controls">
+      <button class="log-ctrl-btn" id="btn-pause" onclick="toggleLogPause()">⏸ 일시정지</button>
+      <button class="log-ctrl-btn active" id="btn-scroll" onclick="toggleAutoScroll()">▼ 자동스크롤</button>
+      <button class="log-ctrl-btn danger" onclick="clearLog()">✕ 지우기</button>
+    </div>
+    <div class="log-body" id="log-body">
+      <div class="log-output" id="log-output">
+        <div class="log-empty" id="log-empty">MQTT 연결 후 esp32/log 토픽 수신 시 표시됩니다</div>
+      </div>
+    </div>
+  </div>
+
   <div class="footer-bar">
     <span id="last-update">마지막 수신: --</span>
     <span id="msg-count">수신 0건</span>
@@ -396,6 +471,7 @@ function toggleConnect() {
     client.subscribe('modbus/scan/done');
     client.subscribe('modbus/scan/status');
     client.subscribe('sensor/mode/status');   // ← 모드 동기화
+    client.subscribe('esp32/log');            // ← 로그
     document.getElementById('btn-scan').disabled = false;
   });
 
@@ -448,6 +524,12 @@ function handleMessage(topic, msg) {
 
   // ── 스캔 완료 ──
   if (topic === 'modbus/scan/done') { scanDone(); return; }
+
+  // ── 앱 로그 ──
+  if (topic === 'esp32/log') {
+    appendLog(msg.toString());
+    return;
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -665,6 +747,112 @@ function toggleCfg() {
   const open = body.classList.contains('open');
   body.classList.toggle('open');
   chev.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+// ═══════════════════════════════════════════════
+// 로그 패널
+// ═══════════════════════════════════════════════
+let logOpen      = false;
+let logPaused    = false;
+let logAutoScroll = true;
+const LOG_MAX    = 200;   // 최대 줄 수
+let logLineCount = 0;
+
+// 토픽 TAG 색상 분류
+function getLogTagClass(text) {
+  if (text.includes('WIFI_MQTT') || text.includes('MQTT'))   return 'wifi';
+  if (text.includes('MODBUS'))                                return 'modbus';
+  if (text.includes('OTA'))                                   return 'ota';
+  if (text.includes('MAIN') || text.includes('APP'))         return 'main';
+  return 'other';
+}
+
+// 로그 레벨 색상
+function getLogMsgClass(text) {
+  if (text.includes('E (') || text.includes('ERROR') || text.includes('실패')) return 'error';
+  if (text.includes('W (') || text.includes('WARN')  || text.includes('경고')) return 'warn';
+  return '';
+}
+
+// 로그 한 줄 추가
+function appendLog(raw) {
+  if (logPaused) return;
+
+  const empty = document.getElementById('log-empty');
+  if (empty) empty.remove();
+
+  // 최대 줄 수 초과 시 맨 위 삭제
+  const output = document.getElementById('log-output');
+  if (logLineCount >= LOG_MAX) {
+    const first = output.querySelector('.log-line');
+    if (first) first.remove();
+  } else {
+    logLineCount++;
+  }
+
+  const now = new Date().toLocaleTimeString('ko-KR', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+
+  // TAG 파싱: "[TAG] message" 또는 "I (xxx) [TAG]: message" 형식
+  let tag = '', msg = raw;
+  const m1 = raw.match(/\[([A-Z_0-9]+)\]\s*(.*)/);
+  const m2 = raw.match(/[IWE] \(\d+\) ([A-Z_0-9]+):\s*(.*)/);
+  if (m2)      { tag = m2[1]; msg = m2[2]; }
+  else if (m1) { tag = m1[1]; msg = m1[2]; }
+
+  const tagClass = getLogTagClass(raw);
+  const msgClass = getLogMsgClass(raw);
+
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML =
+    `<span class="log-time">[${now}]</span>` +
+    (tag ? `<span class="log-tag ${tagClass}">[${tag}]</span>` : '') +
+    `<span class="log-msg ${msgClass}">${msg}</span>`;
+
+  output.appendChild(line);
+
+  if (logAutoScroll) {
+    output.scrollTop = output.scrollHeight;
+  }
+}
+
+// 접기/펼치기
+function toggleLog() {
+  logOpen = !logOpen;
+  document.getElementById('log-body').classList.toggle('open', logOpen);
+  document.getElementById('log-controls').classList.toggle('hidden', !logOpen);
+  document.getElementById('log-chev').style.transform = logOpen ? 'rotate(180deg)' : '';
+}
+
+// 일시정지 토글
+function toggleLogPause() {
+  logPaused = !logPaused;
+  const btn = document.getElementById('btn-pause');
+  const dot = document.getElementById('log-dot');
+  btn.textContent = logPaused ? '▶ 재개' : '⏸ 일시정지';
+  btn.classList.toggle('active', logPaused);
+  dot.classList.toggle('paused', logPaused);
+}
+
+// 자동스크롤 토글
+function toggleAutoScroll() {
+  logAutoScroll = !logAutoScroll;
+  const btn = document.getElementById('btn-scroll');
+  btn.classList.toggle('active', logAutoScroll);
+  btn.textContent = logAutoScroll ? '▼ 자동스크롤' : '— 스크롤 고정';
+  if (logAutoScroll) {
+    const output = document.getElementById('log-output');
+    output.scrollTop = output.scrollHeight;
+  }
+}
+
+// 로그 지우기
+function clearLog() {
+  const output = document.getElementById('log-output');
+  output.innerHTML = '<div class="log-empty" id="log-empty">지워졌습니다</div>';
+  logLineCount = 0;
 }
 
 initChart();
